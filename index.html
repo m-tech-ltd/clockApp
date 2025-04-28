@@ -96,6 +96,8 @@
             border-radius: 4px;
             cursor: pointer;
             font-weight: bold;
+            margin-right: 10px;
+            margin-bottom: 10px;
         }
         button:hover {
             background-color: #3b79cc;
@@ -104,6 +106,27 @@
             font-size: 0.9rem;
             color: #666;
             margin-top: 5px;
+        }
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        .import-container {
+            margin-top: 15px;
+            display: none;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        #import-text {
+            width: 100%;
+            height: 100px;
+            margin-bottom: 10px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
         }
     </style>
 </head>
@@ -176,7 +199,18 @@
                 <input type="time" id="custom-time-2-input">
             </div>
         </div>
-        <button id="save-settings">Save Settings</button>
+
+        <div class="button-group">
+            <button id="save-settings">Save Settings</button>
+            <button id="export-settings">Export Settings to File</button>
+            <button id="show-import">Import Settings from File</button>
+        </div>
+
+        <div id="import-container" class="import-container">
+            <textarea id="import-text" placeholder="Paste your settings text here..."></textarea>
+            <button id="import-settings">Import Settings</button>
+            <button id="cancel-import">Cancel</button>
+        </div>
     </div>
 </div>
 
@@ -223,6 +257,12 @@
 
     // Save settings to localStorage
     document.getElementById('save-settings').addEventListener('click', function() {
+        saveCurrentSettings();
+        alert('Settings saved!');
+    });
+
+    // Function to save current settings
+    function saveCurrentSettings() {
         settings.businessStart = document.getElementById('business-start-input').value;
         settings.lunchTime = document.getElementById('lunch-time-input').value;
         settings.businessEnd = document.getElementById('business-end-input').value;
@@ -241,8 +281,113 @@
 
         customLabel1Elem.textContent = settings.customTime1.label + ':';
         customLabel2Elem.textContent = settings.customTime2.label + ':';
+    }
 
-        alert('Settings saved!');
+    // Export settings to a text file
+    document.getElementById('export-settings').addEventListener('click', function() {
+        // First save the current settings
+        saveCurrentSettings();
+
+        // Format date for filename
+        const now = new Date();
+        const dateStr = now.toISOString().slice(0, 10);
+
+        // Create formatted settings content
+        const settingsContent = `# Clock Application Settings - ${dateStr}
+Business Start Time: ${settings.businessStart}
+Lunch Time: ${settings.lunchTime}
+Business End Time: ${settings.businessEnd}
+Custom Time 1 Label: ${settings.customTime1.label}
+Custom Time 1: ${settings.customTime1.time || 'Not set'}
+Custom Time 2 Label: ${settings.customTime2.label}
+Custom Time 2: ${settings.customTime2.time || 'Not set'}
+
+# JSON data (for import)
+${JSON.stringify(settings, null, 2)}`;
+
+        // Create a blob and download link
+        const blob = new Blob([settingsContent], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `clock-settings-${dateStr}.txt`;
+        document.body.appendChild(a);
+        a.click();
+
+        // Clean up
+        setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }, 100);
+    });
+
+    // Show import container
+    document.getElementById('show-import').addEventListener('click', function() {
+        document.getElementById('import-container').style.display = 'block';
+    });
+
+    // Cancel import
+    document.getElementById('cancel-import').addEventListener('click', function() {
+        document.getElementById('import-container').style.display = 'none';
+        document.getElementById('import-text').value = '';
+    });
+
+    // Import settings from text
+    document.getElementById('import-settings').addEventListener('click', function() {
+        const importText = document.getElementById('import-text').value;
+
+        try {
+            // Try to find JSON data in the imported text
+            const jsonMatch = importText.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+                const importedSettings = JSON.parse(jsonMatch[0]);
+
+                // Validate imported settings
+                if (importedSettings.businessStart &&
+                    importedSettings.lunchTime &&
+                    importedSettings.businessEnd &&
+                    importedSettings.customTime1 &&
+                    importedSettings.customTime2) {
+
+                    // Apply imported settings
+                    settings = importedSettings;
+
+                    // Update form fields
+                    document.getElementById('business-start-input').value = settings.businessStart;
+                    document.getElementById('lunch-time-input').value = settings.lunchTime;
+                    document.getElementById('business-end-input').value = settings.businessEnd;
+
+                    document.getElementById('custom-label-1').value = settings.customTime1.label;
+                    document.getElementById('custom-time-1-input').value = settings.customTime1.time;
+
+                    document.getElementById('custom-label-2').value = settings.customTime2.label;
+                    document.getElementById('custom-time-2-input').value = settings.customTime2.time;
+
+                    // Save to localStorage
+                    localStorage.setItem('clockSettings', JSON.stringify(settings));
+
+                    // Update display
+                    const customLabel1Elem = document.querySelector('.time-item:nth-child(5) .time-label');
+                    const customLabel2Elem = document.querySelector('.time-item:nth-child(6) .time-label');
+
+                    customLabel1Elem.textContent = settings.customTime1.label + ':';
+                    customLabel2Elem.textContent = settings.customTime2.label + ':';
+
+                    // Hide import container
+                    document.getElementById('import-container').style.display = 'none';
+                    document.getElementById('import-text').value = '';
+
+                    alert('Settings imported successfully!');
+                } else {
+                    throw new Error('Invalid settings format');
+                }
+            } else {
+                throw new Error('No valid settings data found');
+            }
+        } catch (error) {
+            alert('Error importing settings: ' + error.message);
+        }
     });
 
     // Update the clock and calculated times
