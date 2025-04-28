@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Clock Application</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+        }
+        .clock-display {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .current-time {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .date {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .specific-times {
+            margin-top: 20px;
+        }
+        .time-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .time-label {
+            font-weight: bold;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        .settings {
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+        .settings-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .settings-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4a89dc;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #3b79cc;
+        }
+        .timezone {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Custom Clock Application</h1>
+
+    <div class="clock-display">
+        <div class="date" id="current-date">Monday, January 1, 2024</div>
+        <div class="current-time" id="current-time">00:00:00</div>
+        <div class="timezone" id="timezone">Timezone: UTC+0</div>
+    </div>
+
+    <div class="specific-times">
+        <div class="time-item">
+            <span class="time-label">Business Day Start:</span>
+            <span id="business-start">09:00:00</span>
+        </div>
+        <div class="time-item">
+            <span class="time-label">Lunch Time:</span>
+            <span id="lunch-time">12:00:00</span>
+        </div>
+        <div class="time-item">
+            <span class="time-label">Business Day End:</span>
+            <span id="business-end">17:00:00</span>
+        </div>
+        <div class="time-item">
+            <span class="time-label">Time Until End of Day:</span>
+            <span id="time-until-eod">00:00:00</span>
+        </div>
+        <div class="time-item">
+            <span class="time-label">Custom Time 1:</span>
+            <span id="custom-time-1">--:--:--</span>
+        </div>
+        <div class="time-item">
+            <span class="time-label">Custom Time 2:</span>
+            <span id="custom-time-2">--:--:--</span>
+        </div>
+    </div>
+
+    <div class="settings">
+        <div class="settings-title">Custom Settings</div>
+        <div class="settings-form">
+            <div class="form-group">
+                <label for="business-start-input">Business Start Time:</label>
+                <input type="time" id="business-start-input" value="09:00">
+            </div>
+            <div class="form-group">
+                <label for="lunch-time-input">Lunch Time:</label>
+                <input type="time" id="lunch-time-input" value="12:00">
+            </div>
+            <div class="form-group">
+                <label for="business-end-input">Business End Time:</label>
+                <input type="time" id="business-end-input" value="17:00">
+            </div>
+            <div class="form-group">
+                <label for="custom-label-1">Custom Time 1 Label:</label>
+                <input type="text" id="custom-label-1" placeholder="e.g., Meeting">
+            </div>
+            <div class="form-group">
+                <label for="custom-time-1-input">Custom Time 1:</label>
+                <input type="time" id="custom-time-1-input">
+            </div>
+            <div class="form-group">
+                <label for="custom-label-2">Custom Time 2 Label:</label>
+                <input type="text" id="custom-label-2" placeholder="e.g., Break">
+            </div>
+            <div class="form-group">
+                <label for="custom-time-2-input">Custom Time 2:</label>
+                <input type="time" id="custom-time-2-input">
+            </div>
+        </div>
+        <button id="save-settings">Save Settings</button>
+    </div>
+</div>
+
+<script>
+    // Initialize default settings
+    let settings = {
+        businessStart: '09:00',
+        lunchTime: '12:00',
+        businessEnd: '17:00',
+        customTime1: { label: 'Custom Time 1', time: '' },
+        customTime2: { label: 'Custom Time 2', time: '' }
+    };
+
+    // Load settings from localStorage if available
+    function loadSettings() {
+        const savedSettings = localStorage.getItem('clockSettings');
+        if (savedSettings) {
+            settings = JSON.parse(savedSettings);
+
+            // Update input fields with saved settings
+            document.getElementById('business-start-input').value = settings.businessStart;
+            document.getElementById('lunch-time-input').value = settings.lunchTime;
+            document.getElementById('business-end-input').value = settings.businessEnd;
+
+            document.getElementById('custom-label-1').value = settings.customTime1.label;
+            document.getElementById('custom-time-1-input').value = settings.customTime1.time;
+
+            document.getElementById('custom-label-2').value = settings.customTime2.label;
+            document.getElementById('custom-time-2-input').value = settings.customTime2.time;
+
+            // Update labels in the display
+            const customLabel1Elem = document.querySelector('.time-item:nth-child(5) .time-label');
+            const customLabel2Elem = document.querySelector('.time-item:nth-child(6) .time-label');
+
+            if (settings.customTime1.label) {
+                customLabel1Elem.textContent = settings.customTime1.label + ':';
+            }
+
+            if (settings.customTime2.label) {
+                customLabel2Elem.textContent = settings.customTime2.label + ':';
+            }
+        }
+    }
+
+    // Save settings to localStorage
+    document.getElementById('save-settings').addEventListener('click', function() {
+        settings.businessStart = document.getElementById('business-start-input').value;
+        settings.lunchTime = document.getElementById('lunch-time-input').value;
+        settings.businessEnd = document.getElementById('business-end-input').value;
+
+        settings.customTime1.label = document.getElementById('custom-label-1').value || 'Custom Time 1';
+        settings.customTime1.time = document.getElementById('custom-time-1-input').value;
+
+        settings.customTime2.label = document.getElementById('custom-label-2').value || 'Custom Time 2';
+        settings.customTime2.time = document.getElementById('custom-time-2-input').value;
+
+        localStorage.setItem('clockSettings', JSON.stringify(settings));
+
+        // Update labels in the display
+        const customLabel1Elem = document.querySelector('.time-item:nth-child(5) .time-label');
+        const customLabel2Elem = document.querySelector('.time-item:nth-child(6) .time-label');
+
+        customLabel1Elem.textContent = settings.customTime1.label + ':';
+        customLabel2Elem.textContent = settings.customTime2.label + ':';
+
+        alert('Settings saved!');
+    });
+
+    // Update the clock and calculated times
+    function updateClock() {
+        const now = new Date();
+
+        // Update current time and date
+        document.getElementById('current-time').textContent = now.toLocaleTimeString();
+        document.getElementById('current-date').textContent = now.toLocaleDateString(undefined, {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        // Display timezone
+        const timeZoneOffset = -now.getTimezoneOffset() / 60;
+        const offsetSign = timeZoneOffset >= 0 ? '+' : '-';
+        document.getElementById('timezone').textContent = `Timezone: UTC${offsetSign}${Math.abs(timeZoneOffset)}`;
+
+        // Update business times
+        document.getElementById('business-start').textContent = formatTimeWithSeconds(settings.businessStart);
+        document.getElementById('lunch-time').textContent = formatTimeWithSeconds(settings.lunchTime);
+        document.getElementById('business-end').textContent = formatTimeWithSeconds(settings.businessEnd);
+
+        // Calculate and display time until end of day
+        const endOfDay = new Date(now);
+        endOfDay.setHours(23, 59, 59);
+
+        const timeDiff = endOfDay - now;
+        const hours = Math.floor(timeDiff / (1000 * 60 * 60));
+        const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+
+        document.getElementById('time-until-eod').textContent =
+            `${padZero(hours)}:${padZero(minutes)}:${padZero(seconds)}`;
+
+        // Update custom times
+        updateCustomTime('custom-time-1', settings.customTime1.time);
+        updateCustomTime('custom-time-2', settings.customTime2.time);
+    }
+
+    // Helper to update custom time displays
+    function updateCustomTime(elementId, timeString) {
+        if (timeString) {
+            document.getElementById(elementId).textContent = formatTimeWithSeconds(timeString);
+        } else {
+            document.getElementById(elementId).textContent = '--:--:--';
+        }
+    }
+
+    // Helper to add seconds to time string
+    function formatTimeWithSeconds(timeString) {
+        if (!timeString) return '--:--:--';
+
+        const [hours, minutes] = timeString.split(':');
+        return `${hours}:${minutes}:00`;
+    }
+
+    // Helper to pad numbers with leading zero
+    function padZero(num) {
+        return num.toString().padStart(2, '0');
+    }
+
+    // Load settings and start the clock
+    loadSettings();
+    updateClock();
+    setInterval(updateClock, 1000);
+</script>
+</body>
+</html>
